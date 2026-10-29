@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F7F1E3;
+    color: #171717;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, .font-heading {
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.03em;
+  }
+
+  .font-spartan {
+    font-family: 'Cinzel', 'Oswald', serif;
+    letter-spacing: 0.08em;
+  }
+}
+
+/* Custom styled scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F7F1E3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C8A653;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A68434;
+}
+
+/* Dark mode scrollbars for Admin */
+.dark-scroll::-webkit-scrollbar-track {
+  background: #202124;
+}
+.dark-scroll::-webkit-scrollbar-thumb {
+  background: #C8A653;
+}
+
+/* Golden border glows */
+.border-gold-glow {
+  border: 1px solid #C8A653;
+  box-shadow: 0 0 15px rgba(200, 166, 83, 0.25);
+}
+
+.gold-gradient-bg {
+  background: linear-gradient(135deg, #E8D49A 0%, #C8A653 50%, #A68434 100%);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #E8D49A 0%, #C8A653 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
