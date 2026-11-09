@@ -1,145 +1,116 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { Shield, Lock, Mail, User, Phone, ArrowRight, AlertCircle } from 'lucide-react';
+import { useNavigate, NavLink } from 'react-router-dom';
+import { User, Mail, Phone, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { login } = useAuth();
+  const { showToast } = useToast();
 
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('+880 17');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const res = await register(name, email, password, phone);
-      if (res.success) {
-        navigate('/student/dashboard');
-      } else {
-        setError(res.error || 'Registration failed.');
-      }
-    } catch (err: any) {
-      setError(err?.message || 'Registration failed.');
-    } finally {
-      setLoading(false);
+    if (!name || phone.length < 11) {
+      showToast('Validation Error', 'Please enter your full name and valid Bangladesh mobile number', 'error');
+      return;
     }
+
+    login(email || `${name.toLowerCase().replace(/\s+/g, '')}@gmail.com`, 'passenger');
+    showToast('Account Created', 'Welcome to Bus Bus Baba!', 'success');
+    navigate('/my-bookings');
   };
 
   return (
-    <div className="bg-ivory min-h-screen py-16 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl border-2 border-[#DFC27D] shadow-card p-8 space-y-6">
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-xl bg-dark text-gold flex items-center justify-center mx-auto border-2 border-gold shadow-gold-sm">
-            <img src="/shield-helmet.svg" alt="Alpha Core Crest" className="w-9 h-9 object-contain" />
+    <div className="min-h-[85vh] flex items-center justify-center px-4 py-12 animate-fade-in">
+      <div className="w-full max-w-md bg-[#111F3B] border border-[#263B5C] rounded-3xl p-6 sm:p-8 shadow-card space-y-6">
+        <div className="flex items-center gap-3">
+          <img src="/images/bus-bus-baba-logo.jpg" alt="Logo" className="w-10 h-10 object-contain rounded-xl border border-[#263B5C]" />
+          <div>
+            <h2 className="text-xl font-black text-white">Create Passenger Account</h2>
+            <span className="text-[11px] text-[#94A3B8]">Save bookings, print tickets, and earn rewards</span>
           </div>
-          <h1 className="font-heading font-black text-2xl uppercase tracking-wider text-dark">
-            CADET REGISTRATION
-          </h1>
-          <p className="text-xs text-spartan-muted">
-            Create your account to unlock lifetime curriculum access and track orders.
-          </p>
         </div>
 
-        {error && (
-          <div className="p-3 rounded-lg bg-red-100 border border-red-300 text-red-800 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block uppercase font-heading font-bold text-dark mb-1">
-              Full Legal Name *
-            </label>
+            <label className="text-xs font-bold text-[#94A3B8] block mb-1">Full Name *</label>
             <div className="relative">
+              <User className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 required
+                placeholder="e.g. Asif Mahmud"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Spartan Warrior"
-                className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-gold focus:outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-xs text-white focus:outline-none focus:border-[#1677FF]"
               />
-              <User className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
             </div>
           </div>
 
           <div>
-            <label className="block uppercase font-heading font-bold text-dark mb-1">
-              Email Address *
-            </label>
+            <label className="text-xs font-bold text-[#94A3B8] block mb-1">Mobile Phone (+880) *</label>
             <div className="relative">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="spartan@example.com"
-                className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-gold focus:outline-none"
-              />
-              <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block uppercase font-heading font-bold text-dark mb-1">
-              Phone Number *
-            </label>
-            <div className="relative">
+              <Phone className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="tel"
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="01844221100"
-                className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-gold focus:outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-xs text-white focus:outline-none focus:border-[#1677FF]"
               />
-              <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
             </div>
           </div>
 
           <div>
-            <label className="block uppercase font-heading font-bold text-dark mb-1">
-              Password *
-            </label>
+            <label className="text-xs font-bold text-[#94A3B8] block mb-1">Email Address</label>
             <div className="relative">
+              <Mail className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                placeholder="asif@gmail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-xs text-white focus:outline-none focus:border-[#1677FF]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-[#94A3B8] block mb-1">Set Password</label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-[#94A3B8] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="password"
                 required
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-300 focus:border-gold focus:outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-xs text-white focus:outline-none focus:border-[#1677FF]"
               />
-              <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
             </div>
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-gold hover:bg-gold-light text-dark font-heading font-black text-xs uppercase tracking-widest transition shadow-gold-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 bg-[#1677FF] hover:bg-[#0E62DD] text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all flex items-center justify-center gap-2 mt-4"
           >
-            <span>{loading ? 'Creating Profile...' : 'Complete Cadet Enrollment'}</span>
+            <span>Register & Start Booking</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
-        <div className="text-center text-xs text-spartan-muted">
-          Already registered?{' '}
-          <Link to="/login" className="text-gold font-bold uppercase hover:underline">
-            Login Here
-          </Link>
-        </div>
+        <p className="text-center text-xs text-[#94A3B8] pt-2 border-t border-[#263B5C]">
+          Already have an account?{' '}
+          <NavLink to="/login" className="text-[#38A5FF] font-bold hover:underline">
+            Sign In here
+          </NavLink>
+        </p>
       </div>
     </div>
   );

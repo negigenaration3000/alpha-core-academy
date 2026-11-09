@@ -4,51 +4,78 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        ivory: {
-          DEFAULT: '#F7F1E3',
-          light: '#FBF8F0',
-          dark: '#EBE2CD',
+        brand: {
+          bg: '#080F22',
+          sidebar: '#0C1730',
+          card: '#111F3B',
+          elevated: '#17294A',
+          blue: '#1677FF',
+          'blue-light': '#38A5FF',
+          orange: '#FF991F',
+          border: '#263B5C',
+          text: '#F8FAFC',
+          muted: '#94A3B8',
         },
-        dark: {
-          DEFAULT: '#111111',
-          sidebar: '#202124',
-          card: '#1A1B1E',
-          surface: '#282A2E',
-          border: '#33353A',
+        navy: {
+          950: '#050A18',
+          900: '#080F22', // Primary background
+          850: '#0C1730', // Sidebar background
+          800: '#111F3B', // Card background
+          750: '#17294A', // Elevated surface
+          700: '#1E335C', // Hover state
+          600: '#263B5C', // Borders
+          500: '#334D77',
         },
-        gold: {
-          DEFAULT: '#C8A653',
-          light: '#E8D49A',
-          dark: '#A68434',
-          subtle: '#FFF9ED',
-          border: '#DFC27D',
+        primary: {
+          DEFAULT: '#1677FF', // Primary blue
+          hover: '#0E62DD',
+          light: '#38A5FF', // Secondary blue
+          dark: '#0A4EB5',
+          glow: 'rgba(22, 119, 255, 0.35)',
         },
-        cream: '#FFF9ED',
-        rose: {
-          DEFAULT: '#E99CB0',
-          light: '#F6CDD7',
-          dark: '#C87289',
+        baba: {
+          orange: '#FF991F',
+          'orange-hover': '#E68512',
+          'orange-light': '#FFB356',
         },
-        spartan: {
-          text: '#171717',
-          muted: '#77716A',
-          bg: '#F7F1E3',
-          gold: '#C8A653',
+        status: {
+          success: '#10B981',
+          warning: '#F59E0B',
+          danger: '#EF4444',
+          info: '#38A5FF',
         }
       },
       fontFamily: {
-        heading: ['Oswald', 'Impact', 'sans-serif'],
-        spartan: ['"Cinzel"', '"Oswald"', 'sans-serif'],
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       boxShadow: {
-        'gold-sm': '0 2px 8px -1px rgba(200, 166, 83, 0.25)',
-        'gold-md': '0 4px 16px -2px rgba(200, 166, 83, 0.35)',
-        'gold-lg': '0 10px 25px -5px rgba(200, 166, 83, 0.45)',
-        'card': '0 4px 20px 0 rgba(0, 0, 0, 0.06)',
+        'card': '0 4px 20px 0 rgba(0, 0, 0, 0.35)',
+        'blue-glow': '0 0 25px -3px rgba(22, 119, 255, 0.35)',
+        'orange-glow': '0 0 20px -3px rgba(255, 153, 31, 0.35)',
+        'elevated': '0 10px 30px -5px rgba(0, 0, 0, 0.5)',
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.2s ease-out',
+        'slide-up': 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        'pulse-subtle': 'pulseSubtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        pulseSubtle: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' },
+        }
       }
     },
   },

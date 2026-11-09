@@ -1,5 +1,6 @@
 {
-  "name": "alpha-code-academy",
+  "name": "bus-bus-baba",
+  "description": "Bus Bus Baba - Complete Bus Transport Management & Booking SaaS Platform in Bangladesh",
   "private": true,
   "version": "1.0.0",
   "type": "module",

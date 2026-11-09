@@ -1,16 +1,16 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth';
-import { CartProvider } from './hooks/useCart';
+import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 import { AppRoutes } from './routes/AppRoutes';
 
 export function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <CartProvider>
+        <ToastProvider>
           <AppRoutes />
-        </CartProvider>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

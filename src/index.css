@@ -3,62 +3,110 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   body {
-    background-color: #F7F1E3;
-    color: #171717;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  }
-
-  h1, h2, h3, h4, .font-heading {
-    font-family: 'Oswald', sans-serif;
-    letter-spacing: 0.03em;
-  }
-
-  .font-spartan {
-    font-family: 'Cinzel', 'Oswald', serif;
-    letter-spacing: 0.08em;
+    background-color: #080F22;
+    color: #F8FAFC;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
   }
 }
 
-/* Custom styled scrollbars */
+/* Custom sleek dark scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #F7F1E3;
+  background: #0C1730;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #C8A653;
-  border-radius: 4px;
+  background: #263B5C;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #A68434;
+  background: #1677FF;
 }
 
-/* Dark mode scrollbars for Admin */
-.dark-scroll::-webkit-scrollbar-track {
-  background: #202124;
-}
-.dark-scroll::-webkit-scrollbar-thumb {
-  background: #C8A653;
-}
-
-/* Golden border glows */
-.border-gold-glow {
-  border: 1px solid #C8A653;
-  box-shadow: 0 0 15px rgba(200, 166, 83, 0.25);
+/* Glass & elevated dark panels matching Bus Bus Baba UI */
+.baba-card {
+  background: #111F3B;
+  border: 1px solid #263B5C;
+  border-radius: 1rem;
 }
 
-.gold-gradient-bg {
-  background: linear-gradient(135deg, #E8D49A 0%, #C8A653 50%, #A68434 100%);
+.baba-card-elevated {
+  background: #17294A;
+  border: 1px solid #263B5C;
+  border-radius: 1rem;
 }
 
-.gold-gradient-text {
-  background: linear-gradient(135deg, #E8D49A 0%, #C8A653 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.baba-gradient-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(22, 119, 255, 0.15) 0%, transparent 70%);
+}
+
+.baba-orange-glow {
+  background: radial-gradient(circle at 50% 100%, rgba(255, 153, 31, 0.12) 0%, transparent 60%);
+}
+
+/* Seat styling */
+.seat-available {
+  background-color: #17294A;
+  border: 1px solid #263B5C;
+  color: #F8FAFC;
+}
+.seat-available:hover {
+  background-color: #1677FF;
+  border-color: #38A5FF;
+  color: #FFFFFF;
+}
+
+.seat-selected {
+  background-color: #1677FF;
+  border: 1px solid #38A5FF;
+  color: #FFFFFF;
+  box-shadow: 0 0 12px rgba(22, 119, 255, 0.5);
+}
+
+.seat-booked {
+  background-color: #1F2937;
+  border: 1px solid #374151;
+  color: #6B7280;
+  cursor: not-allowed;
+}
+
+.seat-reserved {
+  background-color: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #F59E0B;
+  cursor: not-allowed;
+}
+
+/* Print Styles for E-Tickets and Reports */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+
+  .print-card {
+    background: #ffffff !important;
+    color: #111827 !important;
+    border: 2px dashed #9ca3af !important;
+    box-shadow: none !important;
+    padding: 1.5rem !important;
+  }
 }

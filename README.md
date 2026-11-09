@@ -1,138 +1,114 @@
-# ALPHA-CORE ACADEMY (CODE SPARTAN)
-### Full-Stack Online Course Platform & Admin Command Center
+# Bus Bus Baba — Complete Bus Transport Management & Booking SaaS Platform
 
-> **Tagline:** DOMINATE THE TECH AND BUSINESS.  
-> **Secondary Slogan:** CRUSH COMPETITION. NO EXCUSES.  
-> **Lead Instructor:** Sohel Shahriar  
+> **Manage • Operate • Grow**  
+> *Target Market:* Bangladesh (BDT ৳, Asia/Dhaka Timezone, Inter-district Highways)
 
-Alpha-Core Academy is a production-grade, full-stack course selling platform and student management system built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Supabase PostgreSQL**. The visual identity, typography, spacing, and dashboard layouts strictly replicate the reference design.
+Bus Bus Baba is a complete, production-minded multi-module bus transportation management SaaS platform. It combines a passenger-facing online booking portal with a comprehensive operator control center matching the exact dark navy dashboard specification.
 
 ---
 
-## 1. Visual & Aesthetic Architecture
+## 🎨 Visual Identity & Brand System
 
-- **Primary Background:** Warm Ivory (`#F7F1E3`)
-- **Main Dark:** Deep Charcoal (`#111111`)
-- **Sidebar & Card Dark:** Surface Graphite (`#202124`)
-- **Imperial Gold:** Primary (`#C8A653`), Light (`#E8D49A`), Dark (`#A68434`)
-- **Secondary Cream:** `#FFF9ED`
-- **Accent Rose:** `#E99CB0`
-- **Typography:** **Oswald** (Heavy condensed uppercase headings), **Cinzel** (Spartan luxury crests), **Inter** (Clean high-contrast UI body).
-
----
-
-## 2. Key Modules & Features
-
-### A. Public Storefront
-1. **Dynamic Top Header:**
-   - Gold crest shield emblem (`/shield-helmet.svg`)
-   - Real-time course search input with gold magnifying glass icon
-   - Quick role switcher ("Admin Mode" / "Student Mode") for streamlined testing
-   - Social media links dynamically populated from database
-   - Shopping cart with animated items badge
-2. **Hero Carousel:**
-   - Dark technology datacenter backdrop
-   - Instructor portrait (Sohel Shahriar) in professional suit
-   - Prominent slogans, gold CTA button: `"DOMINATE THE CURRICULUM"`
-   - Interactive chevron navigation and slide indicators
-3. **Feature Highlight Cards:**
-   - **Elite Mentorship** (Warm Ivory)
-   - **Warrior Mindset** (Imperial Gold Gradient)
-   - **Tech Mastery** (Muted Rose)
-4. **Category Disciplines:**
-   - Frontend Dominance, Backend Architecture, Systems Warfare, Data Strategies
-5. **Latest Courses Carousel & Grid:**
-   - C++ Masterclass, Next.js Fullstack Warfare, Scalable Systems Dominance
-   - 5-Star ratings, gold price banners, instructor avatars, format pills
-   - Instant "Add to Cart" and "Buy Now" triggers
-6. **Detailed Course Page (`/course/:slug`):**
-   - Independent variation-based pricing engine (Recorded, Recorded + Live Q&A, VIP Spartan Mentorship)
-   - Price updates dynamically in real time upon selecting a format
-7. **Cart & Checkout (`/cart`, `/checkout`):**
-   - Bangladeshi manual payment integration (bKash, Nagad, Rocket, Cash)
-   - Configurable collection numbers loaded dynamically from database settings
-   - Sender mobile number and Transaction ID (TrxID) submission
-8. **Real-Time Order Tracking (`/track-order`):**
-   - Look up order status by order number (`ACA-2026-XXXX`) or mobile number
-
-### B. Student Portal (`/student/dashboard`)
-- **My Courses:** Access-controlled course viewer showing only verified paid enrollments
-- **My Orders:** Full transaction audit trail with payment states
-- **Profile Settings:** Cadet details and role indicators
-
-### C. Admin Command Center (`/admin`)
-- **Visual Design:** Dark vertical sidebar (`#202124`), ivory content (`#F7F1E3`), gold buttons (`#C8A653`)
-- **Top Stats Cards:** Total Enrollments, Total Sales, Active Students, Total Courses
-- **Sales Overview:** Recharts area line chart with gold gradient fill
-- **Recent Enrollments Table:** Student avatar, course variation, amount, status badges
-- **Course Variation Management:** Add, edit regular & sale prices, duplicate, and toggle formats
-- **Dynamic Payment Gateway Settings:** Real-time editable bKash, Nagad, and Rocket numbers with "SAVE CHANGES"
-- **Course & Category Management:** Create, edit, publish/draft courses and categories
-- **Manual Payment Verification Queue (`/admin/orders`):** Review submitted TrxIDs and click "Verify" or "Reject" with internal notes
+- **Primary Background:** `#080F22`
+- **Sidebar Background:** `#0C1730`
+- **Card Background:** `#111F3B`
+- **Elevated Surface:** `#17294A`
+- **Primary Functional Blue:** `#1677FF`
+- **Secondary Blue Light:** `#38A5FF`
+- **Baba Brand Orange:** `#FF991F`
+- **Status Colors:**
+  - Success: `#10B981`
+  - Warning: `#F59E0B`
+  - Danger: `#EF4444`
+- **Typography:** Plus Jakarta Sans & Inter
+- **Iconography:** Lucide React
 
 ---
 
-## 3. Technology Stack
+## 🚀 Key Modules & Architecture
 
-- **Frontend:** React 18, Vite 5, TypeScript 5, Tailwind CSS 3
-- **Icons & Visuals:** Lucide React, Custom SVG Shield & Spartan Crests
-- **Charts:** Recharts
-- **Forms & Validation:** React Hook Form & Zod
-- **Database & Storage:** Supabase PostgreSQL with Row Level Security (RLS)
-- **Local Fallback Engine:** Persistent reactive store with localStorage synchronization
+### A. Operator Admin Dashboard (`/admin`) — Pixel-Perfect Reference Match
+1. **Greeting & Scenic Night Banner:** "Good Morning, Admin 👋" / "Here's what's happening with your fleet today." with the Baba Express highway coach banner and "Travel Smart Travel Better" motto.
+2. **4 Benchmark Metric Cards:**
+   - **Total Buses:** `48` (↑ 6%) with electric blue sparkline.
+   - **Active Routes:** `12` (0%) with purple sparkline.
+   - **Today's Bookings:** `842` (↑ 12%) with emerald sparkline.
+   - **Total Revenue:** `৳ 2,48,750` (↑ 18%) with orange sparkline.
+3. **Booking Overview Area Chart:** Smooth spline with blue glow gradient, 7D, 30D, 3M, 1Y filters, and interactive tooltips showing passenger counts.
+4. **Bus Status Donut Chart:** Donut chart with centered `48 Total` label, breakdown of **32 On Trip**, **12 Available**, and **4 Maintenance**.
+5. **Upcoming Trips:** Departure cards with status indicators (e.g. *Dhaka → Chittagong 8:00 AM On Time*, *Dhaka → Cox's Bazar 11:00 AM Delayed*).
+6. **Recent Bookings:** Live passenger bookings with avatar initials (Md. Rahman, Ayesha Siddika, Tanvir Khan) with BDT prices and time ago timestamps.
+7. **Quick Action Grid:** Instant modal triggers for **Add Bus**, **Create Schedule**, **New Booking**, and **View Reports**.
+
+### B. Core Fleet & Operations Modules
+- **Bus Management (`/admin/buses`):** 48-bus fleet directory with BRTA registration numbers (`DHAKA METRO-BA 14-8890`), manufacturer (Scania, Hyundai, Hino, Volvo), layout (`2x2`, `2x1`, `sleeper_2x1`), assigned drivers, and status controls.
+- **Route Management (`/admin/routes`):** 12 active Bangladesh inter-district highways with intermediate stops, distance in km, travel duration, and base fares.
+- **Driver / Pilot Management (`/admin/drivers`):** Verified heavy-vehicle pilot directory with BRTA driving licenses, expiration monitoring, safety ratings (4.8★ - 5.0★), and completed trip manifests.
+- **Schedule Management (`/admin/schedules`):** Timetable dispatch system with built-in **collision prevention** that detects and stops assigning occupied coaches or drivers to overlapping departure windows.
+- **Bookings & Ticketing (`/admin/bookings`):** Transaction ledger with manual counter booking, booking status updates, cancellation engine, and printable passenger E-Tickets with reference codes (`BBB-2026-XXXX`).
+- **Seat Management (`/admin/seats`):** Visual interactive seat layout editor with live occupancy matrix, VIP holds, and counter reservations.
+- **Expense Tracking (`/admin/expenses`):** Operational cost tracker for diesel/octane refueling, highway tolls (Meghna, Padma Bridge), workshop maintenance, and driver trip allowances.
+- **Payment Settlements (`/admin/payments`):** Digital payment reconciliation for bKash, Nagad, Rocket, credit cards, and counter cash, with refund processing.
+- **Reports & Analytics (`/admin/reports`):** Operating margin (P&L), route yield performance, fleet utilization rates, and **one-click CSV export**.
+- **Notification Center (`/admin/notifications`):** Real-time alert feed for delay warnings, bulk bookings, and workshop reminders.
+- **Platform Settings (`/admin/settings`):** Company profile, BDT currency, Asia/Dhaka timezone, cancellation policies, and RBAC matrix.
+
+### C. Public Booking Portal
+- **Homepage (`/`):** Hero section with the master bus search widget, popular Bangladesh destinations (Cox's Bazar, Sylhet, Chittagong, Rajshahi), verified operator showcase, feature highlights, and FAQs.
+- **Search Results (`/search`):** Real-time coach filtering by AC/Non-AC, coach class, departure time slots (Morning, Afternoon, Night), and price slider.
+- **Interactive Seat Selection (`/book/:scheduleId`):** Realistic bus cockpit layout with live seat selection, dynamic price tally, passenger details form, and simulated payment gateway (bKash, Nagad, Card).
+- **Passenger Account (`/my-bookings`):** Search bookings by reference number or mobile phone number, view digital E-Tickets, and request ticket cancellations.
 
 ---
 
-## 4. Setup & Installation
+## 🔒 Security & Database Integrity
 
-### Step 1: Install Dependencies
+### 1. PostgreSQL Safe Transactional Function
+Located at `supabase/migrations/20261109000000_bus_bus_baba_schema.sql`:
+- Stored procedure `fn_book_seats`: Acquires row-level locks on `schedule_seats` (`FOR UPDATE`) to eliminate double-booking race conditions when multiple passengers select the same seat simultaneously.
+
+### 2. Row Level Security (RLS)
+- Multi-tenant isolation per organization.
+- Public read access for active schedules and available seats.
+- Role-gated mutations for Super Admin, Company Admin, Manager, Agent, Accountant, Driver, and Passenger.
+
+---
+
+## 💻 Running Locally
+
+### 1. Clone & Install Dependencies
 ```bash
 npm install
 ```
 
-### Step 2: Configure Environment Variables
-Copy `.env.example` to `.env`:
-```bash
-cp .env.example .env
-```
-Populate your Supabase credentials:
+### 2. Environment Configuration
+Create a `.env` file in the root directory:
 ```env
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI...
+VITE_SUPABASE_URL=https://vhkurukasuzxwdqcefqm.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 VITE_DEFAULT_CURRENCY=BDT
 VITE_DEFAULT_CURRENCY_SYMBOL=৳
 ```
-*(Note: If left blank or not yet created, the application will automatically run in high-fidelity local simulation mode with all reference data intact).*
 
-### Step 3: Run Supabase SQL Migrations
-In your Supabase project's **SQL Editor**:
-1. Execute `supabase/migrations/20261028000000_alpha_core_schema.sql` to establish tables, constraints, RLS policies, and RPC verification triggers.
-2. Execute `supabase/seed.sql` to load standard categories, courses, variants, payment numbers, and branding.
-
-### Step 4: Bootstrap the First Administrator
-Run this query in Supabase SQL Editor after registering an account:
-```sql
-UPDATE public.profiles
-SET role = 'admin'
-WHERE id = (SELECT id FROM auth.users WHERE email = 'admin@alpha-core.academy');
-```
-
-### Step 5: Start Development Server
+### 3. Start Development Server
 ```bash
 npm run dev
 ```
 
-### Step 6: Build for Production
+### 4. Build for Production
 ```bash
 npm run build
 ```
-The optimized bundle will be generated in `dist/`.
 
 ---
 
-## 5. Security Architecture
+## 👥 Role Personas for Demo Testing
 
-1. **Immutable Order Snapshots:** Course titles, variation names, and unit prices are snapshot into `order_items` at checkout. Future price changes will not alter historical transactions.
-2. **Numeric Currency Precision:** `NUMERIC(12, 2)` is enforced for all monetary values.
-3. **Privileged Roles:** The client browser cannot elevate a user's role. Administrative actions are protected by `public.is_admin()` server-side checks and RLS policies.
-4. **Manual Verification Enforcement:** Courses are only unlocked after an administrator verifies the submitted transaction ID.
+Use the user profile dropdown in the top right or `/login` to test with one click:
+- **Super Admin:** `admin@busbusbaba.com` (All access)
+- **Company Admin:** `director@busbusbaba.com` (M. A. Malek)
+- **Fleet Manager:** `manager@busbusbaba.com` (Kabir Hossain)
+- **Booking Agent:** `agent@busbusbaba.com` (Shakil Ahmed)
+- **Accountant:** `accounts@busbusbaba.com` (Fatema Begum)
+- **Highway Pilot:** `rafiq.driver@busbusbaba.com` (Rafiqul Islam)
+- **Passenger:** `md.rahman@gmail.com` (Md. Rahman)

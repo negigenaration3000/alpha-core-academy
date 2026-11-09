@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /search
+Allow: /routes
+Allow: /about
+Allow: /contact
+Allow: /book/
+
+# Disallow indexing of private operator admin control center
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin/*
+
+Sitemap: https://busbusbaba.com/sitemap.xml

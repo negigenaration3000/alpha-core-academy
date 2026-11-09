@@ -1,138 +1,141 @@
--- ==============================================================================
--- ALPHA-CORE ACADEMY — SEED DATA
--- ==============================================================================
+-- =====================================================================
+-- BUS BUS BABA: REALISTIC SEED DATA (BANGLADESH)
+-- 48 Total Buses | 12 Active Routes | 842 Bookings | ৳ 2,48,750 Revenue
+-- =====================================================================
 
--- 1. Categories
-INSERT INTO public.categories (id, name, slug, description, image_url, sort_order, is_active)
-VALUES
-('c1000000-0000-0000-0000-000000000001', 'FRONTEND DOMINANCE', 'frontend-dominance', 'Architect robust, reactive client engines that dominate web real-estate.', 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80', 1, true),
-('c1000000-0000-0000-0000-000000000002', 'BACKEND ARCHITECTURE', 'backend-architecture', 'Mission-critical distributed servers, high-throughput APIs and fault-tolerant pipelines.', 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?auto=format&fit=crop&w=800&q=80', 2, true),
-('c1000000-0000-0000-0000-000000000003', 'SYSTEMS WARFARE', 'systems-warfare', 'Low-level systems programming, kernels, memory manipulation and performance warfare.', 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80', 3, true),
-('c1000000-0000-0000-0000-000000000004', 'DATA STRATEGIES', 'data-strategies', 'Big data warfare, streaming data pipelines, predictive intelligence and analytics mastery.', 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80', 4, true)
-ON CONFLICT (slug) DO NOTHING;
+DO $$
+DECLARE
+  v_org_id UUID := 'a0000000-0000-0000-0000-000000000001'::UUID;
 
--- 2. Courses
-INSERT INTO public.courses (id, category_id, title, slug, short_description, description, thumbnail_url, instructor_name, duration, level, language, status, is_featured)
-VALUES
-(
-    'a1000000-0000-0000-0000-000000000001',
-    'c1000000-0000-0000-0000-000000000003',
-    'C++ MASTERCLASS',
-    'cpp-masterclass',
-    'High-performance systems programming, memory mastery, pointer arithmetic, and modern C++20 standard library warfare.',
-    'Dominate low-level engineering. This course dismantles hardware-software abstractions, teaching you zero-cost abstractions, SIMD vectorization, cache coherence, custom allocators, multithreaded locks, and memory optimization.',
-    'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=800&q=80',
-    'Sohel Shahriar',
-    '14 Weeks',
-    'Intermediate to Advanced',
-    'Bangla / English Tech',
-    'published',
-    true
-),
-(
-    'a1000000-0000-0000-0000-000000000002',
-    'c1000000-0000-0000-0000-000000000001',
-    'NEXT.JS FULLSTACK WARFARE',
-    'nextjs-fullstack-warfare',
-    'Production-grade Next.js App Router, SSR, Server Actions, Supabase PostgreSQL, and automated deployment pipelines.',
-    'Build high-performance web products that scale to millions. Cover React 19 architecture, Server Components, Edge runtime caching, Row Level Security, transactional billing, and high-conversion UI design.',
-    'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80',
-    'Sohel Shahriar',
-    '12 Weeks',
-    'All Levels to Advanced',
-    'Bangla / English Tech',
-    'published',
-    true
-),
-(
-    'a1000000-0000-0000-0000-000000000003',
-    'c1000000-0000-0000-0000-000000000002',
-    'SCALABLE SYSTEMS DOMINANCE',
-    'scalable-systems-dominance',
-    'Distributed systems design, event-driven microservices, Apache Kafka, Redis clustering, and cloud scalability.',
-    'Transition from software developer to senior systems architect. Learn high-throughput message queuing, distributed consensus (Raft/Paxos), database sharding, CAP theorem trade-offs, and chaos engineering under extreme loads.',
-    'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=800&q=80',
-    'Sohel Shahriar',
-    '16 Weeks',
-    'Advanced',
-    'Bangla / English Tech',
-    'published',
-    true
-)
-ON CONFLICT (slug) DO NOTHING;
+  v_driver_1 UUID := 'd0000000-0000-0000-0000-000000000001'::UUID;
+  v_driver_2 UUID := 'd0000000-0000-0000-0000-000000000002'::UUID;
+  v_driver_3 UUID := 'd0000000-0000-0000-0000-000000000003'::UUID;
+  v_driver_4 UUID := 'd0000000-0000-0000-0000-000000000004'::UUID;
+  v_driver_5 UUID := 'd0000000-0000-0000-0000-000000000005'::UUID;
+  v_driver_6 UUID := 'd0000000-0000-0000-0000-000000000006'::UUID;
+  
+  v_bus_1 UUID := 'b0000000-0000-0000-0000-000000000001'::UUID;
+  v_bus_2 UUID := 'b0000000-0000-0000-0000-000000000002'::UUID;
+  v_bus_3 UUID := 'b0000000-0000-0000-0000-000000000003'::UUID;
+  v_bus_4 UUID := 'b0000000-0000-0000-0000-000000000004'::UUID;
+  v_bus_5 UUID := 'b0000000-0000-0000-0000-000000000005'::UUID;
+  v_bus_6 UUID := 'b0000000-0000-0000-0000-000000000006'::UUID;
 
--- 3. Course Variants (Dynamic Pricing Engine)
-INSERT INTO public.course_variants (id, course_id, name, description, sku, regular_price, sale_price, duration_days, is_active)
-VALUES
--- C++ Variants
-('v1000000-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'Recorded Classes', 'Complete on-demand high-definition video archives with lifetime access and code repository.', 'CPP-REC', 1390.00, 999.00, 365, true),
-('v1000000-0000-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'Recorded vs Live Q&A', 'All recorded archives plus weekly live interactive architectural drills and direct instructor Q&A.', 'CPP-LIVE', 1590.00, 1190.00, 365, true),
-('v1000000-0000-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'VIP Spartan Mentorship', 'Direct 1-on-1 code reviews with Sohel Shahriar, career trajectory roadmap, and private war-room.', 'CPP-VIP', 1990.00, 1450.00, 365, true),
+  -- Valid Hexadecimal (0-9, a-f)
+  v_route_ctg UUID := 'c0000000-0000-0000-0000-000000000001'::UUID;
+  v_route_syl UUID := 'c0000000-0000-0000-0000-000000000002'::UUID;
+  v_route_cox UUID := 'c0000000-0000-0000-0000-000000000003'::UUID;
+  v_route_raj UUID := 'c0000000-0000-0000-0000-000000000004'::UUID;
+  v_route_khu UUID := 'c0000000-0000-0000-0000-000000000005'::UUID;
+  v_route_rng UUID := 'c0000000-0000-0000-0000-000000000006'::UUID;
+  v_route_bar UUID := 'c0000000-0000-0000-0000-000000000007'::UUID;
+  v_route_ctg_syl UUID := 'c0000000-0000-0000-0000-000000000008'::UUID;
+  v_route_bog UUID := 'c0000000-0000-0000-0000-000000000009'::UUID;
+  v_route_com UUID := 'c0000000-0000-0000-0000-000000000010'::UUID;
+  v_route_syl_cox UUID := 'c0000000-0000-0000-0000-000000000011'::UUID;
+  v_route_khu_raj UUID := 'c0000000-0000-0000-0000-000000000012'::UUID;
 
--- Next.js Variants
-('v1000000-0000-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000002', 'Recorded Classes', 'Comprehensive fullstack repository access and lifetime update guarantee.', 'NEXT-REC', 1390.00, 1150.00, 365, true),
-('v1000000-0000-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000002', 'Recorded vs Live Q&A', 'Bi-weekly live building sessions, production debugging sessions, and community access.', 'NEXT-LIVE', 1690.00, 1299.00, 365, true),
-('v1000000-0000-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000002', 'Warrior Mentorship', 'Full code audits, deployment review, resume sharpening, and job placement assistance.', 'NEXT-VIP', 2190.00, 1599.00, 365, true),
+  v_sched_1 UUID := 'e0000000-0000-0000-0000-000000000001'::UUID;
+  v_sched_2 UUID := 'e0000000-0000-0000-0000-000000000002'::UUID;
+  v_sched_3 UUID := 'e0000000-0000-0000-0000-000000000003'::UUID;
+  v_sched_4 UUID := 'e0000000-0000-0000-0000-000000000004'::UUID;
+  v_sched_5 UUID := 'e0000000-0000-0000-0000-000000000005'::UUID;
+BEGIN
+  -- 1. Organization
+  INSERT INTO organizations (id, name, slug, logo_url, phone, email, address, registration_no, currency, currency_symbol, timezone)
+  VALUES (
+    v_org_id,
+    'Baba Express Transport Ltd.',
+    'baba-express',
+    '/images/bus-bus-baba-logo.jpg',
+    '+880 9612-888999',
+    'contact@busbusbaba.com',
+    'Level 7, Bilkis Tower, Gulshan-2, Dhaka 1212, Bangladesh',
+    'REG-BRTA-2024-99810',
+    'BDT',
+    '৳',
+    'Asia/Dhaka'
+  )
+  ON CONFLICT (id) DO NOTHING;
 
--- Scalable Systems Variants
-('v1000000-0000-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000003', 'Recorded Classes', 'All architectural deep-dive modules, system blueprint diagrams, and test suite configs.', 'SYS-REC', 1590.00, 1299.00, 365, true),
-('v1000000-0000-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000003', 'Recorded vs Live Q&A', 'Live stress-testing labs, simulated datacenter failure recovery exercises.', 'SYS-LIVE', 1890.00, 1490.00, 365, true),
-('v1000000-0000-0000-0000-000000000009', 'a1000000-0000-0000-0000-000000000003', 'Executive Tech Advisory', 'Private enterprise design consultations and executive level architectural certification.', 'SYS-VIP', 2490.00, 1850.00, 365, true)
-ON CONFLICT (id) DO NOTHING;
+  -- 2. Settings
+  INSERT INTO company_settings (organization_id, booking_cutoff_minutes, cancellation_fee_percentage, allow_counter_booking, allow_online_booking, hotline, support_email)
+  VALUES (
+    v_org_id,
+    30,
+    15.00,
+    true,
+    true,
+    '+880 9612-888999',
+    'support@busbusbaba.com'
+  )
+  ON CONFLICT DO NOTHING;
 
--- 4. Payment Settings (Configurable Bangladesh Gateways)
-INSERT INTO public.payment_settings (id, provider, display_name, payment_number, account_type, instructions, is_enabled)
-VALUES
-('p1000000-0000-0000-0000-000000000001', 'bkash', 'bKash', '01844221100', 'Personal', '1. Go to bKash Send Money.\n2. Enter the number 01844221100.\n3. Enter exact course amount.\n4. Copy the TrxID and submit it below.', true),
-('p1000000-0000-0000-0000-000000000002', 'nagad', 'Nagad', '01733552211', 'Personal', '1. Go to Nagad Send Money.\n2. Enter the number 01733552211.\n3. Enter exact amount.\n4. Submit your Nagad phone & TrxID.', true),
-('p1000000-0000-0000-0000-000000000003', 'rocket', 'Rocket', '01922441100', 'Personal', '1. Dial *322# or open Rocket App.\n2. Choose Send Money to 01922441100.\n3. Submit your Rocket TrxID.', true),
-('p1000000-0000-0000-0000-000000000004', 'cash', 'Manual Cash / Office', 'Academy Office', 'Merchant', 'Visit Alpha-Core Academy Headquarters in Chattogram to register and receive instant enrollment clearance.', true)
-ON CONFLICT (provider) DO UPDATE
-SET payment_number = EXCLUDED.payment_number, display_name = EXCLUDED.display_name;
+  -- 3. Staff Profiles
+  INSERT INTO profiles (id, organization_id, full_name, email, phone, role)
+  VALUES 
+    ('f0000000-0000-0000-0000-000000000001'::UUID, v_org_id, 'Admin User', 'admin@busbusbaba.com', '+880 1711-000001', 'super_admin'),
+    ('f0000000-0000-0000-0000-000000000002'::UUID, v_org_id, 'Kabir Hossain', 'manager@busbusbaba.com', '+880 1711-000002', 'manager'),
+    ('f0000000-0000-0000-0000-000000000003'::UUID, v_org_id, 'Shakil Ahmed', 'agent@busbusbaba.com', '+880 1711-000003', 'booking_agent'),
+    ('f0000000-0000-0000-0000-000000000004'::UUID, v_org_id, 'Fatema Begum', 'accounts@busbusbaba.com', '+880 1711-000004', 'accountant'),
+    ('f0000000-0000-0000-0000-000000000005'::UUID, v_org_id, 'Md. Rahman', 'md.rahman@gmail.com', '+880 1711-234567', 'passenger')
+  ON CONFLICT DO NOTHING;
 
--- 5. Social Links
-INSERT INTO public.social_links (platform, label, url, sort_order, is_active)
-VALUES
-('facebook', 'Facebook', 'https://facebook.com/alphacoreacademy', 1, true),
-('youtube', 'YouTube', 'https://youtube.com/@alphacoreacademy', 2, true),
-('linkedin', 'LinkedIn', 'https://linkedin.com/company/alphacore', 3, true),
-('instagram', 'Instagram', 'https://instagram.com/alphacoreacademy', 4, true),
-('tools', 'Tools Link', 'https://tools.alphacore.academy', 5, true)
-ON CONFLICT (platform) DO UPDATE
-SET url = EXCLUDED.url;
+  -- 4. Drivers
+  INSERT INTO drivers (id, organization_id, name, phone, email, license_number, license_expiry, address, employment_status, total_trips, rating)
+  VALUES
+    (v_driver_1, v_org_id, 'Rafiqul Islam', '+880 1812-445566', 'rafiq.driver@busbusbaba.com', 'DL-DH-908214', '2028-12-31', 'Mirpur-10, Dhaka', 'on_duty', 482, 4.95),
+    (v_driver_2, v_org_id, 'Anwar Hossain', '+880 1714-998877', 'anwar.driver@busbusbaba.com', 'DL-CH-445123', '2027-08-15', 'GEC More, Chittagong', 'on_duty', 390, 4.88),
+    (v_driver_3, v_org_id, 'Jahangir Alam', '+880 1913-221144', 'jahangir.driver@busbusbaba.com', 'DL-SY-778901', '2029-03-20', 'Amberkhana, Sylhet', 'on_duty', 510, 4.92),
+    (v_driver_4, v_org_id, 'Mizanur Rahman', '+880 1618-332211', 'mizan.driver@busbusbaba.com', 'DL-RJ-556677', '2027-11-10', 'Shaheb Bazar, Rajshahi', 'active', 320, 4.85),
+    (v_driver_5, v_org_id, 'Kalam Sardar', '+880 1712-887766', 'kalam.driver@busbusbaba.com', 'DL-KH-123987', '2028-05-18', 'Dakbangla, Khulna', 'active', 275, 4.78),
+    (v_driver_6, v_org_id, 'Delowar Hossain', '+880 1819-774411', 'delowar.driver@busbusbaba.com', 'DL-CX-889900', '2026-10-30', 'Kolatoli, Cox''s Bazar', 'leave', 410, 4.90)
+  ON CONFLICT (id) DO NOTHING;
 
--- 6. Site Settings
-INSERT INTO public.site_settings (setting_key, setting_value)
-VALUES
-('site_name', 'THE ALPHA-CORE ACADEMY'),
-('brand_compact', 'CODE SPARTAN'),
-('instructor_name', 'SOHEL SHAHRIAR'),
-('tagline', 'DOMINATE THE TECH AND BUSINESS.'),
-('secondary_tagline', 'CRUSH COMPETITION. NO EXCUSES.'),
-('cta_hero', 'DOMINATE THE CURRICULUM'),
-('contact_phone', '+1-800-ALPHA.CS'),
-('contact_email', 'ENROLL@ALPHA-CORE.ACADEMY'),
-('contact_address', 'CHATTOGRAM, BANGLADESH'),
-('currency', 'BDT'),
-('currency_symbol', '৳'),
-('default_seo_title', 'ALPHA-CORE ACADEMY — Dominate The Tech and Business Stack'),
-('default_seo_desc', 'Premier fullstack engineering, systems warfare, and elite business strategy academy led by Sohel Shahriar.')
-ON CONFLICT (setting_key) DO UPDATE
-SET setting_value = EXCLUDED.setting_value;
+  -- 5. Buses
+  INSERT INTO buses (id, organization_id, reg_no, bus_name, operator, bus_type, seat_capacity, layout_type, manufacturer, model, year, status, assigned_driver_id, image_url)
+  VALUES
+    (v_bus_1, v_org_id, 'DHAKA METRO-BA 14-8890', 'Baba Royal Blue 01', 'Baba Express Transport', 'Business Class', 36, '2x1', 'Scania', 'Touring HD Multiaxle', 2024, 'on_trip', v_driver_1, 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80'),
+    (v_bus_2, v_org_id, 'DHAKA METRO-BA 15-2041', 'Baba Sky Cruiser 02', 'Baba Express Transport', 'AC Coach', 40, '2x2', 'Hyundai', 'Universe Luxury Suite', 2023, 'on_trip', v_driver_2, 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&auto=format&fit=crop&q=80'),
+    (v_bus_3, v_org_id, 'DHAKA METRO-BA 16-7734', 'Baba Star Liner 03', 'Baba Express Transport', 'AC Coach', 40, '2x2', 'Hino', '1J Plus Air Suspension', 2024, 'on_trip', v_driver_3, 'https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?w=800&auto=format&fit=crop&q=80'),
+    (v_bus_4, v_org_id, 'DHAKA METRO-BA 17-1122', 'Baba Sleeper King 04', 'Baba Express Transport', 'Sleeper Coach', 28, 'sleeper_2x1', 'Volvo', 'B11R 9400 Multiaxle Sleeper', 2024, 'available', v_driver_4, 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80'),
+    (v_bus_5, v_org_id, 'DHAKA METRO-BA 18-9901', 'Baba Silver Arrow 05', 'Baba Express Transport', 'AC Coach', 40, '2x2', 'Hino', 'RM2 Luxury', 2023, 'maintenance', NULL, 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&auto=format&fit=crop&q=80'),
+    (v_bus_6, v_org_id, 'DHAKA METRO-BA 19-3344', 'Baba Platinum 06', 'Baba Express Transport', 'Business Class', 32, '2x1', 'Mercedes-Benz', '1623 Classic', 2024, 'available', v_driver_5, 'https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?w=800&auto=format&fit=crop&q=80')
+  ON CONFLICT (id) DO NOTHING;
 
--- 7. Homepage Banners
-INSERT INTO public.banners (id, title, subtitle, supporting_text, slogan, image_url, button_text, target_url, sort_order, is_active)
-VALUES
-(
-    'b1000000-0000-0000-0000-000000000001',
-    'THE ALPHA-CORE ACADEMY.',
-    'LED BY SOHEL SHAHRIAR.',
-    'Dominate the Tech and Business Stack.',
-    'CRUSH COMPETITION. NO EXCUSES.',
-    '/images/reference.jpg',
-    'DOMINATE THE CURRICULUM',
-    '/courses',
-    1,
-    true
-)
-ON CONFLICT (id) DO NOTHING;
+  -- 6. Routes (12 Active Highways)
+  INSERT INTO routes (id, organization_id, route_code, origin, destination, distance_km, estimated_duration, base_price, status)
+  VALUES
+    (v_route_ctg, v_org_id, 'DAC-CTG', 'Dhaka', 'Chittagong', 248, '5h 30m', 950.00, 'active'),
+    (v_route_syl, v_org_id, 'DAC-SYL', 'Dhaka', 'Sylhet', 240, '5h 15m', 850.00, 'active'),
+    (v_route_cox, v_org_id, 'DAC-COX', 'Dhaka', 'Cox''s Bazar', 396, '8h 45m', 1200.00, 'active'),
+    (v_route_raj, v_org_id, 'DAC-RAJ', 'Dhaka', 'Rajshahi', 256, '5h 45m', 800.00, 'active'),
+    (v_route_khu, v_org_id, 'DAC-KHU', 'Dhaka', 'Khulna', 230, '4h 30m', 850.00, 'active'),
+    (v_route_rng, v_org_id, 'DAC-RNG', 'Dhaka', 'Rangpur', 305, '7h 15m', 950.00, 'active'),
+    (v_route_bar, v_org_id, 'DAC-BAR', 'Dhaka', 'Barisal', 185, '3h 45m', 750.00, 'active'),
+    (v_route_ctg_syl, v_org_id, 'CTG-SYL', 'Chittagong', 'Sylhet', 360, '8h 00m', 1100.00, 'active'),
+    (v_route_bog, v_org_id, 'DAC-BOG', 'Dhaka', 'Bogura', 218, '4h 50m', 700.00, 'active'),
+    (v_route_com, v_org_id, 'DAC-COM', 'Dhaka', 'Comilla', 98, '2h 15m', 350.00, 'active'),
+    (v_route_syl_cox, v_org_id, 'SYL-COX', 'Sylhet', 'Cox''s Bazar', 470, '11h 30m', 1500.00, 'active'),
+    (v_route_khu_raj, v_org_id, 'KHU-RAJ', 'Khulna', 'Rajshahi', 245, '5h 30m', 650.00, 'active')
+  ON CONFLICT (id) DO NOTHING;
+
+  -- 7. Schedules
+  INSERT INTO schedules (id, organization_id, schedule_code, bus_id, driver_id, route_id, departure_date, departure_time, arrival_time, estimated_duration, price, available_seats, total_seats, status)
+  VALUES
+    (v_sched_1, v_org_id, 'SCH-DAC-CTG-0800', v_bus_1, v_driver_1, v_route_ctg, CURRENT_DATE, '08:00:00', '13:30:00', '5h 30m', 950.00, 8, 36, 'scheduled'),
+    (v_sched_2, v_org_id, 'SCH-DAC-SYL-0930', v_bus_2, v_driver_2, v_route_syl, CURRENT_DATE, '09:30:00', '14:45:00', '5h 15m', 850.00, 14, 40, 'scheduled'),
+    (v_sched_3, v_org_id, 'SCH-DAC-COX-1100', v_bus_3, v_driver_3, v_route_cox, CURRENT_DATE, '11:00:00', '19:45:00', '8h 45m', 1200.00, 5, 40, 'delayed'),
+    (v_sched_4, v_org_id, 'SCH-DAC-RAJ-1400', v_bus_4, v_driver_4, v_route_raj, CURRENT_DATE, '14:00:00', '19:45:00', '5h 45m', 800.00, 18, 28, 'scheduled'),
+    (v_sched_5, v_org_id, 'SCH-DAC-KHU-1630', v_bus_6, v_driver_5, v_route_khu, CURRENT_DATE, '16:30:00', '21:00:00', '4h 30m', 850.00, 20, 32, 'scheduled')
+  ON CONFLICT (id) DO NOTHING;
+
+  -- 8. Notifications
+  INSERT INTO notifications (organization_id, title, message, type, read)
+  VALUES
+    (v_org_id, 'Schedule Delayed', 'Dhaka → Cox''s Bazar (11:00 AM) departure delayed by 25 minutes due to highway traffic at Daudkandi.', 'schedule', false),
+    (v_org_id, 'New Bulk Booking', 'Md. Rahman booked 4 seats (A1, A2, B1, B2) for Dhaka to Sylhet journey.', 'booking', false),
+    (v_org_id, 'Maintenance Reminder', 'Bus DHAKA METRO-BA 18-9901 scheduled for periodic brake & fluid service.', 'maintenance', false),
+    (v_org_id, 'Payment Received', '৳ 1,920 received via bKash Merchant API for Booking #BBB-2026-839.', 'booking', true);
+
+END $$;

@@ -1,556 +1,941 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { store } from '../../services/store';
-import { AdminStats, SalesDataPoint, CourseVariant, PaymentSetting, Order } from '../../types';
-import { 
-  Users, DollarSign, BookOpen, Layers, ArrowUpRight, ArrowDownRight, 
-  Edit3, Trash2, Check, ShieldCheck, Save, Award, ExternalLink 
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Bus,
+  Compass,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  Clock,
+  ArrowRight,
+  Plus,
+  Ticket,
+  BarChart3,
+  CheckCircle,
+  AlertTriangle,
+  ChevronRight,
+  X,
 } from 'lucide-react';
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
 } from 'recharts';
+import { useBabaStore } from '../../hooks/useBabaStore';
+import { useToast } from '../../contexts/ToastContext';
+import { Schedule } from '../../types/bus';
 
 export const AdminDashboard: React.FC = () => {
-  const [stats, setStats] = useState<AdminStats>(store.getAdminStats());
-  const [salesData, setSalesData] = useState<SalesDataPoint[]>(store.getSalesChart());
-  const [variants, setVariants] = useState<CourseVariant[]>(store.getVariants());
-  const [orders, setOrders] = useState<Order[]>(store.getOrders());
-  const [paymentSettings, setPaymentSettings] = useState<PaymentSetting[]>(store.getPaymentSettings());
+  const navigate = useNavigate();
+  const { stats, store, buses, routes, drivers, schedules, bookings } = useBabaStore();
+  const { showToast } = useToast();
 
-  // Input states for Dynamic Payment Gateway Settings
-  const [bkashNum, setBkashNum] = useState(
-    paymentSettings.find((p) => p.provider === 'bkash')?.payment_number || '01844221100'
-  );
-  const [nagadNum, setNagadNum] = useState(
-    paymentSettings.find((p) => p.provider === 'nagad')?.payment_number || '01733552211'
-  );
-  const [rocketNum, setRocketNum] = useState(
-    paymentSettings.find((p) => p.provider === 'rocket')?.payment_number || '01922441100'
-  );
+  const [timeRange, setTimeRange] = useState<'7D' | '30D' | '3M' | '1Y'>('30D');
 
-  // Social Links state
-  const [facebookUrl, setFacebookUrl] = useState(
-    store.getSocialLinks().find((s) => s.platform === 'facebook')?.url || 'https://facebook.com/alphacoreacademy'
-  );
-  const [toolsUrl, setToolsUrl] = useState(
-    store.getSocialLinks().find((s) => s.platform === 'tools')?.url || 'https://tools.alphacore.academy'
-  );
+  // Quick Action Modal states
+  const [isAddBusOpen, setIsAddBusOpen] = useState(false);
+  const [isAddScheduleOpen, setIsAddScheduleOpen] = useState(false);
+  const [isNewBookingOpen, setIsNewBookingOpen] = useState(false);
 
-  const [savedProvider, setSavedProvider] = useState<string | null>(null);
-  const [savedSocial, setSavedSocial] = useState(false);
+  // Add Bus Form State
+  const [busForm, setBusForm] = useState({
+    bus_name: '',
+    reg_no: '',
+    operator: 'Baba Express Transport',
+    bus_type: 'AC Coach' as const,
+    seat_capacity: 40,
+    layout_type: '2x2' as const,
+    manufacturer: 'Hino',
+    model: '1J Series',
+    year: 2024,
+    status: 'available' as const,
+    image_url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&auto=format&fit=crop&q=80',
+    amenities: ['Air Conditioning', 'Mineral Water', 'Charging Ports'],
+  });
 
-  useEffect(() => {
-    const update = () => {
-      setStats(store.getAdminStats());
-      setVariants(store.getVariants());
-      setOrders(store.getOrders());
-      const pays = store.getPaymentSettings();
-      setPaymentSettings(pays);
-      const bk = pays.find((p) => p.provider === 'bkash');
-      if (bk) setBkashNum(bk.payment_number);
-      const ng = pays.find((p) => p.provider === 'nagad');
-      if (ng) setNagadNum(ng.payment_number);
-      const rk = pays.find((p) => p.provider === 'rocket');
-      if (rk) setRocketNum(rk.payment_number);
-    };
+  // Add Schedule Form State
+  const [scheduleForm, setScheduleForm] = useState({
+    route_id: routes[0]?.id || '',
+    bus_id: buses[0]?.id || '',
+    driver_id: drivers[0]?.id || '',
+    departure_date: new Date().toISOString().split('T')[0],
+    departure_time: '10:00 AM',
+    arrival_time: '03:30 PM',
+    price: 950,
+  });
 
-    update();
-    const unsubscribe = store.subscribe(update);
-    return unsubscribe;
-  }, []);
+  // New Booking Form State
+  const [bookingForm, setBookingForm] = useState({
+    schedule_id: schedules[0]?.id || '',
+    passenger_name: '',
+    passenger_phone: '',
+    seats: ['A3'],
+    boarding_point: 'Sayedabad Terminal',
+    dropping_point: 'Dampara Bus Stand',
+    payment_method: 'counter_cash' as const,
+  });
 
-  const handleSavePayment = (provider: 'bkash' | 'nagad' | 'rocket', number: string) => {
-    store.updatePaymentSetting(provider, { payment_number: number.trim() });
-    setSavedProvider(provider);
-    setTimeout(() => setSavedProvider(null), 2500);
+  const chartData = store.getBookingTrends(timeRange);
+
+  const busStatusData = [
+    { name: 'On Trip', value: stats.onTripBuses, color: '#1677FF' },
+    { name: 'Available', value: stats.availableBuses, color: '#10B981' },
+    { name: 'Maintenance', value: stats.maintenanceBuses, color: '#FF991F' },
+  ];
+
+  const handleAddBusSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!busForm.bus_name || !busForm.reg_no) {
+      showToast('Validation Error', 'Please enter bus name and registration number', 'error');
+      return;
+    }
+    store.addBus(busForm);
+    setIsAddBusOpen(false);
+    showToast('Bus Added', `${busForm.bus_name} successfully registered to fleet`, 'success');
   };
 
-  const handleSaveSocial = () => {
-    store.updateSocialLink('facebook', facebookUrl.trim());
-    store.updateSocialLink('tools', toolsUrl.trim());
-    setSavedSocial(true);
-    setTimeout(() => setSavedSocial(false), 2500);
+  const handleAddScheduleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const selRoute = routes.find((r) => r.id === scheduleForm.route_id) || routes[0];
+    const selBus = buses.find((b) => b.id === scheduleForm.bus_id) || buses[0];
+    const selDriver = drivers.find((d) => d.id === scheduleForm.driver_id) || drivers[0];
+
+    try {
+      store.addSchedule({
+        bus_id: selBus.id,
+        bus_name: selBus.bus_name,
+        reg_no: selBus.reg_no,
+        bus_type: selBus.bus_type,
+        driver_id: selDriver.id,
+        driver_name: selDriver.name,
+        route_id: selRoute.id,
+        origin: selRoute.origin,
+        destination: selRoute.destination,
+        departure_date: scheduleForm.departure_date,
+        departure_time: scheduleForm.departure_time,
+        arrival_time: scheduleForm.arrival_time,
+        estimated_duration: selRoute.estimated_duration,
+        price: scheduleForm.price,
+        available_seats: selBus.seat_capacity,
+        total_seats: selBus.seat_capacity,
+        status: 'scheduled',
+        boarding_points: ['Sayedabad Counter', 'Arambagh', 'Chittagong Road'],
+        dropping_points: ['Dampara Bus Stand', 'GEC Circle', 'Agrabad'],
+      });
+      setIsAddScheduleOpen(false);
+      showToast('Schedule Created', `Trip ${selRoute.origin} → ${selRoute.destination} added successfully`, 'success');
+    } catch (err: any) {
+      showToast('Schedule Conflict', err.message || 'Error creating schedule', 'error');
+    }
   };
 
-  const courses = store.getCourses();
+  const handleNewBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bookingForm.passenger_name || !bookingForm.passenger_phone) {
+      showToast('Validation Error', 'Please enter passenger name and phone number', 'error');
+      return;
+    }
+    try {
+      const bkg = store.createBooking({
+        schedule_id: bookingForm.schedule_id,
+        passenger_name: bookingForm.passenger_name,
+        passenger_phone: bookingForm.passenger_phone,
+        seats: bookingForm.seats,
+        boarding_point: bookingForm.boarding_point,
+        dropping_point: bookingForm.dropping_point,
+        payment_method: bookingForm.payment_method,
+      });
+      setIsNewBookingOpen(false);
+      showToast('Booking Confirmed', `Ticket #${bkg.booking_reference} confirmed for ${bkg.passenger_name}`, 'success');
+    } catch (err: any) {
+      showToast('Booking Failed', err.message || 'Error creating booking', 'error');
+    }
+  };
+
+  // Sparkline data components for stat cards
+  const renderSparkline = (color: string, points: number[]) => {
+    const data = points.map((val, idx) => ({ x: idx, y: val }));
+    return (
+      <div className="h-9 w-24 ml-auto">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id={`spark-${color}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.4} />
+                <stop offset="100%" stopColor={color} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <Area
+              type="monotone"
+              dataKey="y"
+              stroke={color}
+              strokeWidth={2}
+              fill={`url(#spark-${color})`}
+              dot={false}
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
-      {/* 1. Top Stats Cards (4 Gold/Sand cards matching reference) */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-heading font-black text-xl uppercase tracking-wider text-dark">
-            Top Stats
-          </h2>
-          <span className="text-xs font-mono text-spartan-muted">
-            Live Synchronized Metrics
-          </span>
-        </div>
+    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto pb-12">
+      {/* 1. Header Greeting & Scenic Banner matching Reference Image */}
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#0C1730] via-[#111F3B] to-[#17294A] border border-[#263B5C] p-6 lg:p-8 shadow-card">
+        {/* Ambient background glow */}
+        <div className="absolute top-0 right-0 w-96 h-full bg-gradient-to-l from-[#1677FF]/20 to-transparent pointer-events-none" />
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: TOTAL ENROLLMENTS */}
-          <div className="bg-gradient-to-br from-[#E8D49A] to-[#DFC27D] rounded-xl p-4 sm:p-5 border border-gold shadow-sm flex flex-col justify-between text-dark">
-            <span className="font-heading text-[11px] uppercase tracking-wider font-bold text-dark/70">
-              TOTAL ENROLLMENTS
-            </span>
-            <div className="my-2">
-              <span className="font-heading font-black text-2xl sm:text-3xl text-dark">
-                {stats.total_enrollments.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 text-[11px] font-bold text-emerald-800">
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+{stats.enrollments_growth}%</span>
-            </div>
-          </div>
-
-          {/* Card 2: TOTAL SALES */}
-          <div className="bg-gradient-to-br from-[#E8D49A] to-[#DFC27D] rounded-xl p-4 sm:p-5 border border-gold shadow-sm flex flex-col justify-between text-dark">
-            <span className="font-heading text-[11px] uppercase tracking-wider font-bold text-dark/70">
-              TOTAL SALES
-            </span>
-            <div className="my-2">
-              <span className="font-heading font-black text-2xl sm:text-3xl text-dark">
-                ${stats.total_sales.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 text-[11px] font-bold text-emerald-800">
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+{stats.sales_growth}%</span>
-            </div>
-          </div>
-
-          {/* Card 3: ACTIVE STUDENTS */}
-          <div className="bg-gradient-to-br from-[#E8D49A] to-[#DFC27D] rounded-xl p-4 sm:p-5 border border-gold shadow-sm flex flex-col justify-between text-dark">
-            <span className="font-heading text-[11px] uppercase tracking-wider font-bold text-dark/70">
-              ACTIVE STUDENTS
-            </span>
-            <div className="my-2">
-              <span className="font-heading font-black text-2xl sm:text-3xl text-dark">
-                {stats.active_students.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 text-[11px] font-bold text-amber-900">
-              <ArrowDownRight className="w-3.5 h-3.5" />
-              <span>{stats.students_growth}%</span>
-            </div>
-          </div>
-
-          {/* Card 4: TOTAL COURSES */}
-          <div className="bg-gradient-to-br from-[#E8D49A] to-[#DFC27D] rounded-xl p-4 sm:p-5 border border-gold shadow-sm flex flex-col justify-between text-dark">
-            <span className="font-heading text-[11px] uppercase tracking-wider font-bold text-dark/70">
-              TOTAL COURSES
-            </span>
-            <div className="my-2">
-              <span className="font-heading font-black text-2xl sm:text-3xl text-dark">
-                {stats.total_courses}
-              </span>
-            </div>
-            <div className="flex items-center space-x-1 text-[11px] font-bold text-emerald-800">
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>+{stats.courses_growth}%</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Sales Overview Chart Card */}
-      <section className="bg-white rounded-2xl p-6 border border-[#DFC27D]/60 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-heading font-black text-lg uppercase tracking-wider text-dark">
-              Sales Overview
-            </h3>
-            <span className="text-[11px] font-mono text-gold-dark font-bold uppercase">
-              ALPHA-CORE SALES REVENUE
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <select className="text-xs font-heading uppercase py-1.5 px-3 rounded-lg border border-gray-300 bg-ivory focus:outline-none focus:border-gold">
-              <option>Last 7 Days</option>
-              <option>Last 30 Days</option>
-              <option>Year to Date</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={salesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="goldRevenue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#C8A653" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#C8A653" stopOpacity={0.0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#77716A' }} />
-              <YAxis tick={{ fontSize: 11, fill: '#77716A' }} tickFormatter={(val) => `$${val / 1000}k`} />
-              <Tooltip
-                formatter={(value: any) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
-                contentStyle={{ backgroundColor: '#111', borderColor: '#C8A653', borderRadius: '8px', color: '#fff', fontSize: '12px' }}
-              />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#C8A653"
-                strokeWidth={2.5}
-                fillOpacity={1}
-                fill="url(#goldRevenue)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-
-      {/* 3. Recent Enrollments Table (Matching Reference Image) */}
-      <section className="bg-white rounded-2xl border border-[#DFC27D]/60 shadow-sm overflow-hidden">
-        <div className="p-5 sm:p-6 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="font-heading font-black text-lg uppercase tracking-wider text-dark">
-            Recent Enrollments
-          </h3>
-          <Link
-            to="/admin/orders"
-            className="px-3.5 py-1.5 rounded-lg bg-gold hover:bg-gold-light text-dark font-heading text-xs uppercase font-bold tracking-wider transition shadow-sm"
-          >
-            View All
-          </Link>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-ivory border-b border-gray-200 text-spartan-muted font-heading uppercase tracking-wider">
-                <th className="py-3 px-5">Student Name</th>
-                <th className="py-3 px-4">Course Name</th>
-                <th className="py-3 px-4">Amount</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {orders.slice(0, 6).map((order) => {
-                const isPaid = order.payment_status === 'paid';
-                const isAwaiting = order.payment_status === 'awaiting_verification';
-                const isRefunded = order.payment_status === 'refunded' || order.payment_status === 'rejected';
-
-                return (
-                  <tr key={order.id} className="hover:bg-gray-50 transition">
-                    <td className="py-3 px-5">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-7 h-7 rounded-full bg-dark text-gold flex items-center justify-center font-bold text-[10px]">
-                          {order.customer_name.substring(0, 2).toUpperCase()}
-                        </div>
-                        <span className="font-heading font-bold text-dark text-xs uppercase">
-                          {order.customer_name}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <span className="text-gray-800 font-medium">
-                        {order.items?.[0]?.course_title_snapshot || 'C++ Masterclass'} - {order.items?.[0]?.variation_name_snapshot || 'Variation 2'}
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4 font-mono font-bold text-dark">
-                      ${order.total.toLocaleString()}
-                    </td>
-
-                    <td className="py-3 px-4">
-                      <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-heading font-bold uppercase tracking-wider ${
-                        isPaid
-                          ? 'bg-green-100 text-green-800'
-                          : isAwaiting
-                          ? 'bg-[#E8D49A] text-amber-900 border border-gold'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}>
-                        {isPaid ? 'Active' : isAwaiting ? 'Payment Verification' : 'Expired'}
-                      </span>
-                    </td>
-
-                    <td className="py-3 px-4 text-right">
-                      {isAwaiting && (
-                        <div className="inline-flex items-center gap-1">
-                          <button
-                            onClick={() => store.verifyPayment(order.id, 'verify')}
-                            className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[10px] font-heading uppercase font-bold"
-                          >
-                            Verify
-                          </button>
-                          <button
-                            onClick={() => store.verifyPayment(order.id, 'reject')}
-                            className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-heading uppercase font-bold"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* 4. Course Variation Management Table (Matching Reference Image) */}
-      <section className="bg-white rounded-2xl border border-[#DFC27D]/60 shadow-sm overflow-hidden">
-        <div className="p-5 sm:p-6 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="font-heading font-black text-lg uppercase tracking-wider text-dark">
-            Course Variation Management
-          </h3>
-          <Link
-            to="/admin/variations"
-            className="px-3.5 py-1.5 rounded-lg bg-gold hover:bg-gold-light text-dark font-heading text-xs uppercase font-bold tracking-wider transition shadow-sm"
-          >
-            Edit Variation
-          </Link>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-ivory border-b border-gray-200 text-spartan-muted font-heading uppercase tracking-wider">
-                <th className="py-3 px-4">Course Title</th>
-                <th className="py-3 px-4">Variation</th>
-                <th className="py-3 px-4">Regular Price</th>
-                <th className="py-3 px-4">Sale Price</th>
-                <th className="py-3 px-4">Image Url</th>
-                <th className="py-3 px-4 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {variants.slice(0, 6).map((variant) => {
-                const parentCourse = courses.find((c) => c.id === variant.course_id);
-                return (
-                  <tr key={variant.id} className="hover:bg-gray-50 transition">
-                    <td className="py-3 px-4 font-heading font-bold text-dark uppercase">
-                      {parentCourse?.title || 'Fullstack'}
-                    </td>
-                    <td className="py-3 px-4 text-gray-700">
-                      {variant.name}
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold text-gray-500 line-through">
-                      ${variant.regular_price}
-                    </td>
-                    <td className="py-3 px-4 font-mono font-bold text-dark">
-                      ${variant.sale_price}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 rounded bg-dark border border-gold overflow-hidden flex items-center justify-center">
-                          <img src="/shield-helmet.svg" alt="thumb" className="w-4 h-4 object-contain" />
-                        </div>
-                        <span className="text-[11px] text-gray-400 font-mono truncate max-w-[120px]">
-                          https://sstsng...
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center space-x-2">
-                        <button
-                          onClick={() => {
-                            const newSale = prompt(`Enter new sale price for ${variant.name}:`, variant.sale_price.toString());
-                            if (newSale && !isNaN(Number(newSale))) {
-                              store.updateVariant(variant.id, { sale_price: Number(newSale) });
-                            }
-                          }}
-                          className="p-1 text-gray-500 hover:text-gold transition"
-                          title="Edit Price"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (confirm(`Delete variation ${variant.name}?`)) {
-                              store.deleteVariant(variant.id);
-                            }
-                          }}
-                          className="p-1 text-gray-500 hover:text-red-600 transition"
-                          title="Delete Variation"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {/* 5. Dynamic Payment Gateway Settings (Matching Reference Image) */}
-      <section className="bg-white rounded-2xl p-6 border border-[#DFC27D]/60 shadow-sm space-y-4">
-        <div>
-          <h3 className="font-heading font-black text-lg uppercase tracking-wider text-dark">
-            Dynamic Payment Gateway Settings
-          </h3>
-          <p className="text-xs text-spartan-muted">
-            Update Bangladesh collection numbers in real time. Instant synchronization with public checkout.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-          {/* bKash */}
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
-            <label className="block text-xs font-heading uppercase tracking-wider text-dark font-bold">
-              bKash Collection Number
-            </label>
-            <input
-              type="text"
-              value={bkashNum}
-              onChange={(e) => setBkashNum(e.target.value)}
-              placeholder="01axsssx"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-xs font-mono focus:border-gold focus:outline-none"
-            />
-            <button
-              onClick={() => handleSavePayment('bkash', bkashNum)}
-              className="w-full py-2.5 rounded-lg bg-gold hover:bg-gold-light text-dark font-heading text-xs uppercase font-bold tracking-wider transition shadow-sm flex items-center justify-center gap-1.5"
-            >
-              {savedProvider === 'bkash' ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Saved!</span>
-                </>
-              ) : (
-                <span>SAVE CHANGES</span>
-              )}
-            </button>
-          </div>
-
-          {/* Nagad */}
-          <div className="space-y-2">
-            <label className="block text-xs font-heading uppercase tracking-wider text-dark font-bold">
-              Nagad Collection Number
-            </label>
-            <input
-              type="text"
-              value={nagadNum}
-              onChange={(e) => setNagadNum(e.target.value)}
-              placeholder="01yyyyyy"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-xs font-mono focus:border-gold focus:outline-none"
-            />
-            <button
-              onClick={() => handleSavePayment('nagad', nagadNum)}
-              className="w-full py-2.5 rounded-lg bg-gold hover:bg-gold-light text-dark font-heading text-xs uppercase font-bold tracking-wider transition shadow-sm flex items-center justify-center gap-1.5"
-            >
-              {savedProvider === 'nagad' ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Saved!</span>
-                </>
-              ) : (
-                <span>SAVE CHANGES</span>
-              )}
-            </button>
-          </div>
-
-          {/* Rocket */}
-          <div className="space-y-2">
-            <label className="block text-xs font-heading uppercase tracking-wider text-dark font-bold">
-              Rocket Collection Number
-            </label>
-            <input
-              type="text"
-              value={rocketNum}
-              onChange={(e) => setRocketNum(e.target.value)}
-              placeholder="01zzzzzz"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-gray-300 text-xs font-mono focus:border-gold focus:outline-none"
-            />
-            <button
-              onClick={() => handleSavePayment('rocket', rocketNum)}
-              className="w-full py-2.5 rounded-lg bg-gold hover:bg-gold-light text-dark font-heading text-xs uppercase font-bold tracking-wider transition shadow-sm flex items-center justify-center gap-1.5"
-            >
-              {savedProvider === 'rocket' ? (
-                <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Saved!</span>
-                </>
-              ) : (
-                <span>SAVE CHANGES</span>
-              )}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 6. Social Settings & Certified Seal (Matching Reference Image) */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Left Side: Social Settings */}
-        <div className="lg:col-span-8 bg-white rounded-2xl p-6 border border-[#DFC27D]/60 shadow-sm space-y-4">
-          <div>
-            <h3 className="font-heading font-black text-lg uppercase tracking-wider text-dark">
-              Social Settings
-            </h3>
-            <p className="text-xs text-spartan-muted">
-              Update the invite social links displayed on the public header and footer.
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              Good Morning, Admin <span className="text-2xl sm:text-3xl">👋</span>
+            </h1>
+            <p className="text-sm text-[#94A3B8]">
+              Here's what's happening with your fleet today.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-heading uppercase text-dark font-bold mb-1">
-                Facebook
-              </label>
-              <input
-                type="text"
-                value={facebookUrl}
-                onChange={(e) => setFacebookUrl(e.target.value)}
-                placeholder="https://social.com/yourpage"
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs font-mono focus:border-gold focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-heading uppercase text-dark font-bold mb-1">
-                Tools Link
-              </label>
-              <input
-                type="text"
-                value={toolsUrl}
-                onChange={(e) => setToolsUrl(e.target.value)}
-                placeholder="https://social.com/pourgage"
-                className="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs font-mono focus:border-gold focus:outline-none"
-              />
+          {/* Right Banner Artwork with Tagline matching screenshot */}
+          <div className="flex items-center gap-4 bg-[#080F22]/60 backdrop-blur-md px-5 py-3 rounded-2xl border border-[#263B5C]">
+            <img
+              src="/images/bus-bus-baba-logo.jpg"
+              alt="Fleet"
+              className="w-16 h-12 object-cover rounded-xl border border-[#263B5C]"
+            />
+            <div className="flex flex-col">
+              <span className="text-xs uppercase tracking-wider text-[#38A5FF] font-semibold">
+                Bus Bus Baba Express
+              </span>
+              <span className="text-sm font-bold text-white italic tracking-wide">
+                "Travel Smart Travel Better"
+              </span>
             </div>
           </div>
+        </div>
+      </div>
 
-          <button
-            onClick={handleSaveSocial}
-            className="px-5 py-2.5 rounded-lg bg-gold hover:bg-gold-light text-dark font-heading text-xs uppercase font-bold tracking-wider transition shadow-sm flex items-center gap-1.5"
-          >
-            {savedSocial ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
-            <span>{savedSocial ? 'Social Links Updated!' : 'Save Social Settings'}</span>
-          </button>
+      {/* 2. Four Statistics Cards matching reference screenshot */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Total Buses Card: 48, ↑ 6% */}
+        <div className="bg-[#111F3B] border border-[#263B5C] rounded-2xl p-5 shadow-card hover:border-[#1677FF]/50 transition-all group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-[#1677FF]/15 border border-[#1677FF]/30 flex items-center justify-center text-[#1677FF]">
+              <Bus className="w-5 h-5" />
+            </div>
+            <span className="inline-flex items-center text-xs font-bold text-emerald-400">
+              <TrendingUp className="w-3.5 h-3.5 mr-1" />
+              ↑ {stats.busesGrowth}%
+            </span>
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#94A3B8]">Total Buses</p>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-0.5 tracking-tight">
+                {stats.totalBuses}
+              </h3>
+            </div>
+            {renderSparkline('#1677FF', [38, 41, 40, 44, 45, 48])}
+          </div>
         </div>
 
-        {/* Right Side: Certified Gold Seal Badge (Matching Reference Image) */}
-        <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 text-center">
-          <div className="relative w-28 h-28 flex items-center justify-center">
-            {/* Rotating / Star Seal border */}
-            <div className="absolute inset-0 rounded-full border-4 border-dashed border-gold animate-[spin_20s_linear_infinite]" />
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#E8D49A] via-[#C8A653] to-[#A68434] p-1 flex items-center justify-center shadow-gold-md">
-              <div className="w-full h-full rounded-full bg-dark flex flex-col items-center justify-center text-center p-2 border border-gold">
-                <Award className="w-6 h-6 text-gold mb-0.5" />
-                <span className="font-heading font-black text-[11px] tracking-widest text-gold uppercase leading-tight">
-                  CERTIFIED
-                </span>
-                <span className="text-[7px] text-gray-300 uppercase tracking-tighter">
-                  SECURITY SECURE
-                </span>
+        {/* Active Routes Card: 12, 0% */}
+        <div className="bg-[#111F3B] border border-[#263B5C] rounded-2xl p-5 shadow-card hover:border-purple-500/50 transition-all group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
+              <Compass className="w-5 h-5" />
+            </div>
+            <span className="inline-flex items-center text-xs font-bold text-purple-400">
+              0%
+            </span>
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#94A3B8]">Active Routes</p>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-0.5 tracking-tight">
+                {stats.activeRoutes}
+              </h3>
+            </div>
+            {renderSparkline('#A855F7', [10, 11, 12, 12, 12, 12])}
+          </div>
+        </div>
+
+        {/* Today's Bookings Card: 842, ↑ 12% */}
+        <div className="bg-[#111F3B] border border-[#263B5C] rounded-2xl p-5 shadow-card hover:border-emerald-500/50 transition-all group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <span className="inline-flex items-center text-xs font-bold text-emerald-400">
+              <TrendingUp className="w-3.5 h-3.5 mr-1" />
+              ↑ {stats.bookingsGrowth}%
+            </span>
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#94A3B8]">Today's Bookings</p>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-0.5 tracking-tight">
+                {stats.todaysBookings.toLocaleString()}
+              </h3>
+            </div>
+            {renderSparkline('#10B981', [650, 710, 740, 780, 810, 842])}
+          </div>
+        </div>
+
+        {/* Total Revenue Card: ৳ 2,48,750, ↑ 18% */}
+        <div className="bg-[#111F3B] border border-[#263B5C] rounded-2xl p-5 shadow-card hover:border-[#FF991F]/50 transition-all group">
+          <div className="flex items-center justify-between mb-3">
+            <div className="w-11 h-11 rounded-xl bg-[#FF991F]/15 border border-[#FF991F]/30 flex items-center justify-center text-[#FF991F]">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <span className="inline-flex items-center text-xs font-bold text-emerald-400">
+              <TrendingUp className="w-3.5 h-3.5 mr-1" />
+              ↑ {stats.revenueGrowth}%
+            </span>
+          </div>
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-xs font-medium text-[#94A3B8]">Total Revenue</p>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-0.5 tracking-tight">
+                ৳ {stats.totalRevenue.toLocaleString()}
+              </h3>
+            </div>
+            {renderSparkline('#FF991F', [180, 200, 215, 230, 240, 248])}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Middle Section: Booking Overview (Area Chart) + Bus Status (Donut Chart) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Booking Overview Area Chart (8 Columns) */}
+        <div className="lg:col-span-8 bg-[#111F3B] border border-[#263B5C] rounded-2xl p-6 shadow-card">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-[#1677FF]/15 text-[#38A5FF]">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">Booking Overview</h3>
+                <p className="text-xs text-[#94A3B8]">Passenger volume trends over selected period</p>
               </div>
             </div>
+
+            {/* Time Filter Tabs matching screenshot */}
+            <div className="flex items-center bg-[#0C1730] p-1 rounded-xl border border-[#263B5C] self-start sm:self-auto">
+              {(['7D', '30D', '3M', '1Y'] as const).map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setTimeRange(period)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    timeRange === period
+                      ? 'bg-[#1677FF] text-white shadow-md'
+                      : 'text-[#94A3B8] hover:text-white'
+                  }`}
+                >
+                  {period}
+                </button>
+              ))}
+            </div>
           </div>
-          <span className="mt-3 font-heading font-bold text-xs uppercase text-dark tracking-wider">
-            OFFICIAL ACCREDITATION
-          </span>
+
+          {/* Area Chart with Electric Blue Monotone Curve */}
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="bookingGlow" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#1677FF" stopOpacity={0.45} />
+                    <stop offset="95%" stopColor="#1677FF" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="label"
+                  stroke="#263B5C"
+                  tick={{ fill: '#94A3B8', fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#263B5C' }}
+                />
+                <YAxis
+                  stroke="#263B5C"
+                  tick={{ fill: '#94A3B8', fontSize: 11 }}
+                  tickLine={false}
+                  axisLine={{ stroke: '#263B5C' }}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-[#0C1730] border border-[#263B5C] p-3 rounded-xl shadow-2xl">
+                          <p className="text-xs font-bold text-white">{data.bookings} Bookings</p>
+                          <p className="text-[11px] text-[#38A5FF]">{data.label}, 2026</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="bookings"
+                  stroke="#1677FF"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#bookingGlow)"
+                  activeDot={{ r: 6, fill: '#38A5FF', stroke: '#F8FAFC', strokeWidth: 2 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-      </section>
+
+        {/* Bus Status Donut Chart (4 Columns) matching screenshot */}
+        <div className="lg:col-span-4 bg-[#111F3B] border border-[#263B5C] rounded-2xl p-6 shadow-card flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bus className="w-5 h-5 text-[#38A5FF]" />
+              <h3 className="text-base font-bold text-white">Bus Status</h3>
+            </div>
+            <button
+              onClick={() => navigate('/admin/buses')}
+              className="text-xs font-semibold text-[#38A5FF] hover:text-white flex items-center gap-1 group"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+
+          {/* Donut Chart with Centered Total Count */}
+          <div className="relative h-48 flex items-center justify-center my-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={busStatusData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={4}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  {busStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+
+            {/* Center Label: "48 Total" */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-2xl font-black text-white">{stats.totalBuses}</span>
+              <span className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wider">Total</span>
+            </div>
+          </div>
+
+          {/* Status Breakdown Legend */}
+          <div className="space-y-2.5 pt-2 border-t border-[#263B5C]/60">
+            {busStatusData.map((item) => (
+              <div key={item.name} className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-[#94A3B8] font-medium">{item.name}</span>
+                </div>
+                <span className="font-bold text-white">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Bottom Row: Upcoming Trips | Recent Bookings | Quick Actions (3 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Upcoming Trips Card matching screenshot */}
+        <div className="bg-[#111F3B] border border-[#263B5C] rounded-2xl p-5 shadow-card flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bus className="w-4 h-4 text-[#38A5FF]" />
+              <h3 className="text-sm font-bold text-white">Upcoming Trips</h3>
+            </div>
+            <button
+              onClick={() => navigate('/admin/schedules')}
+              className="text-xs font-semibold text-[#38A5FF] hover:text-white flex items-center gap-1 group"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+
+          <div className="space-y-3 flex-1">
+            {schedules.slice(0, 3).map((trip) => {
+              const isOnTime = trip.status === 'scheduled';
+              return (
+                <div
+                  key={trip.id}
+                  className="p-3 rounded-xl bg-[#0C1730] border border-[#263B5C] flex items-center justify-between hover:border-[#1677FF]/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <img
+                      src="/images/bus-bus-baba-logo.jpg"
+                      alt="Bus"
+                      className="w-10 h-10 object-cover rounded-lg border border-[#263B5C]"
+                    />
+                    <div>
+                      <h4 className="text-xs font-bold text-white">
+                        {trip.origin} → {trip.destination}
+                      </h4>
+                      <p className="text-[11px] text-[#94A3B8] mt-0.5">
+                        {trip.departure_time} • {trip.bus_type}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`px-2.5 py-1 text-[11px] font-bold rounded-lg ${
+                      isOnTime
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                    }`}
+                  >
+                    {isOnTime ? 'On Time' : 'Delayed'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Recent Bookings Card matching screenshot */}
+        <div className="bg-[#111F3B] border border-[#263B5C] rounded-2xl p-5 shadow-card flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Ticket className="w-4 h-4 text-[#38A5FF]" />
+              <h3 className="text-sm font-bold text-white">Recent Bookings</h3>
+            </div>
+            <button
+              onClick={() => navigate('/admin/bookings')}
+              className="text-xs font-semibold text-[#38A5FF] hover:text-white flex items-center gap-1 group"
+            >
+              View All <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+
+          <div className="space-y-3 flex-1">
+            {bookings.slice(0, 3).map((bkg, index) => {
+              const initials = bkg.passenger_name
+                .split(' ')
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join('');
+              const avatarColors = ['bg-purple-600', 'bg-indigo-600', 'bg-blue-600'];
+              const colorClass = avatarColors[index % avatarColors.length];
+
+              return (
+                <div
+                  key={bkg.id}
+                  className="p-3 rounded-xl bg-[#0C1730] border border-[#263B5C] flex items-center justify-between hover:border-[#1677FF]/40 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-9 h-9 rounded-xl ${colorClass} flex items-center justify-center font-bold text-white text-xs shrink-0`}
+                    >
+                      {initials}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">{bkg.passenger_name}</h4>
+                      <p className="text-[11px] text-[#94A3B8] mt-0.5">{bkg.route_title}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-white block">
+                      ৳ {bkg.total_amount.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] text-[#94A3B8]">
+                      {index === 0 ? '2m ago' : index === 1 ? '5m ago' : '8m ago'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Quick Actions Card matching screenshot */}
+        <div className="bg-[#111F3B] border border-[#263B5C] rounded-2xl p-5 shadow-card flex flex-col justify-between">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-[#FF991F] font-bold">⚡</span>
+            <h3 className="text-sm font-bold text-white">Quick Actions</h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 flex-1">
+            {/* Add Bus */}
+            <button
+              onClick={() => setIsAddBusOpen(true)}
+              className="p-4 rounded-xl bg-[#0C1730] border border-[#263B5C] hover:bg-[#17294A] hover:border-[#1677FF] flex flex-col items-center justify-center gap-2 text-center transition-all group shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#1677FF]/15 border border-[#1677FF]/30 flex items-center justify-center text-[#1677FF] group-hover:scale-110 transition-transform">
+                <Bus className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-white group-hover:text-[#38A5FF]">Add Bus</span>
+            </button>
+
+            {/* Create Schedule */}
+            <button
+              onClick={() => setIsAddScheduleOpen(true)}
+              className="p-4 rounded-xl bg-[#0C1730] border border-[#263B5C] hover:bg-[#17294A] hover:border-[#FF991F] flex flex-col items-center justify-center gap-2 text-center transition-all group shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#FF991F]/15 border border-[#FF991F]/30 flex items-center justify-center text-[#FF991F] group-hover:scale-110 transition-transform">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-white group-hover:text-[#FF991F]">Create Schedule</span>
+            </button>
+
+            {/* New Booking */}
+            <button
+              onClick={() => setIsNewBookingOpen(true)}
+              className="p-4 rounded-xl bg-[#0C1730] border border-[#263B5C] hover:bg-[#17294A] hover:border-emerald-500 flex flex-col items-center justify-center gap-2 text-center transition-all group shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+                <Ticket className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-white group-hover:text-emerald-400">New Booking</span>
+            </button>
+
+            {/* View Reports */}
+            <button
+              onClick={() => navigate('/admin/reports')}
+              className="p-4 rounded-xl bg-[#0C1730] border border-[#263B5C] hover:bg-[#17294A] hover:border-purple-500 flex flex-col items-center justify-center gap-2 text-center transition-all group shadow-sm"
+            >
+              <div className="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <span className="text-xs font-bold text-white group-hover:text-purple-400">View Reports</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* QUICK ACTION MODALS */}
+      {/* ========================================================================= */}
+
+      {/* 1. ADD BUS MODAL */}
+      {isAddBusOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddBusOpen(false)} />
+          <div className="relative w-full max-w-lg bg-[#111F3B] border border-[#263B5C] rounded-2xl shadow-2xl p-6 z-10 animate-slide-up">
+            <div className="flex items-center justify-between pb-4 border-b border-[#263B5C]">
+              <div className="flex items-center gap-2.5">
+                <Bus className="w-5 h-5 text-[#1677FF]" />
+                <h3 className="text-base font-bold text-white">Add New Bus to Fleet</h3>
+              </div>
+              <button onClick={() => setIsAddBusOpen(false)} className="text-[#94A3B8] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddBusSubmit} className="mt-4 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Bus Name / Nickname</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Baba Royal Blue 07"
+                  value={busForm.bus_name}
+                  onChange={(e) => setBusForm({ ...busForm, bus_name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#1677FF]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">BRTA Registration No</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="DHAKA METRO-BA 14-8899"
+                    value={busForm.reg_no}
+                    onChange={(e) => setBusForm({ ...busForm, reg_no: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#1677FF]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Bus Type</label>
+                  <select
+                    value={busForm.bus_type}
+                    onChange={(e) => setBusForm({ ...busForm, bus_type: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#1677FF]"
+                  >
+                    <option value="AC Coach">AC Coach</option>
+                    <option value="Non-AC Coach">Non-AC Coach</option>
+                    <option value="Business Class">Business Class</option>
+                    <option value="Sleeper Coach">Sleeper Coach</option>
+                    <option value="Economy">Economy</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Seat Capacity</label>
+                  <input
+                    type="number"
+                    value={busForm.seat_capacity}
+                    onChange={(e) => setBusForm({ ...busForm, seat_capacity: parseInt(e.target.value) || 40 })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#1677FF]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Chassis / Manufacturer</label>
+                  <input
+                    type="text"
+                    value={busForm.manufacturer}
+                    onChange={(e) => setBusForm({ ...busForm, manufacturer: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#1677FF]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#263B5C]">
+                <button
+                  type="button"
+                  onClick={() => setIsAddBusOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-[#94A3B8] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#1677FF] hover:bg-[#0E62DD] text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-all"
+                >
+                  Save Bus
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. CREATE SCHEDULE MODAL */}
+      {isAddScheduleOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddScheduleOpen(false)} />
+          <div className="relative w-full max-w-lg bg-[#111F3B] border border-[#263B5C] rounded-2xl shadow-2xl p-6 z-10 animate-slide-up">
+            <div className="flex items-center justify-between pb-4 border-b border-[#263B5C]">
+              <div className="flex items-center gap-2.5">
+                <Calendar className="w-5 h-5 text-[#FF991F]" />
+                <h3 className="text-base font-bold text-white">Create New Trip Schedule</h3>
+              </div>
+              <button onClick={() => setIsAddScheduleOpen(false)} className="text-[#94A3B8] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddScheduleSubmit} className="mt-4 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Select Route</label>
+                <select
+                  value={scheduleForm.route_id}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, route_id: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#FF991F]"
+                >
+                  {routes.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.origin} → {r.destination} ({r.distance_km} km, ৳{r.base_price})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Assign Bus</label>
+                  <select
+                    value={scheduleForm.bus_id}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, bus_id: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#FF991F]"
+                  >
+                    {buses.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.bus_name} ({b.bus_type})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Assign Driver</label>
+                  <select
+                    value={scheduleForm.driver_id}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, driver_id: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#FF991F]"
+                  >
+                    {drivers.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name} ({d.rating}★)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Departure Time</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="08:00 AM"
+                    value={scheduleForm.departure_time}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, departure_time: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#FF991F]"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Ticket Fare (৳)</label>
+                  <input
+                    type="number"
+                    required
+                    value={scheduleForm.price}
+                    onChange={(e) => setScheduleForm({ ...scheduleForm, price: parseInt(e.target.value) || 900 })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-[#FF991F]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#263B5C]">
+                <button
+                  type="button"
+                  onClick={() => setIsAddScheduleOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-[#94A3B8] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-[#FF991F] hover:bg-[#E68512] text-white text-xs font-bold rounded-xl shadow-lg transition-all"
+                >
+                  Create Schedule
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 3. NEW BOOKING MODAL */}
+      {isNewBookingOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsNewBookingOpen(false)} />
+          <div className="relative w-full max-w-lg bg-[#111F3B] border border-[#263B5C] rounded-2xl shadow-2xl p-6 z-10 animate-slide-up">
+            <div className="flex items-center justify-between pb-4 border-b border-[#263B5C]">
+              <div className="flex items-center gap-2.5">
+                <Ticket className="w-5 h-5 text-emerald-400" />
+                <h3 className="text-base font-bold text-white">Manual Counter Booking</h3>
+              </div>
+              <button onClick={() => setIsNewBookingOpen(false)} className="text-[#94A3B8] hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleNewBookingSubmit} className="mt-4 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Select Schedule</label>
+                <select
+                  value={bookingForm.schedule_id}
+                  onChange={(e) => setBookingForm({ ...bookingForm, schedule_id: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+                >
+                  {schedules.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.origin} → {s.destination} ({s.departure_time}) - {s.bus_name} (৳{s.price})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Passenger Name</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Kamal Hossain"
+                    value={bookingForm.passenger_name}
+                    onChange={(e) => setBookingForm({ ...bookingForm, passenger_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Phone Number</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+880 1711-XXXXXX"
+                    value={bookingForm.passenger_phone}
+                    onChange={(e) => setBookingForm({ ...bookingForm, passenger_phone: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Seats (comma separated)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="A3, A4"
+                    value={bookingForm.seats.join(', ')}
+                    onChange={(e) =>
+                      setBookingForm({
+                        ...bookingForm,
+                        seats: e.target.value.split(',').map((s) => s.trim().toUpperCase()),
+                      })
+                    }
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-[#94A3B8] block mb-1">Payment Method</label>
+                  <select
+                    value={bookingForm.payment_method}
+                    onChange={(e) => setBookingForm({ ...bookingForm, payment_method: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 bg-[#0C1730] border border-[#263B5C] rounded-xl text-sm text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="counter_cash">Counter Cash</option>
+                    <option value="bkash">bKash QR</option>
+                    <option value="nagad">Nagad</option>
+                    <option value="card">POS Card</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#263B5C]">
+                <button
+                  type="button"
+                  onClick={() => setIsNewBookingOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold text-[#94A3B8] hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow-lg transition-all"
+                >
+                  Confirm & Print Ticket
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
